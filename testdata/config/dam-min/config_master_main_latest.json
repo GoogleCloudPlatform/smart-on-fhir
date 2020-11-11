@@ -1,0 +1,234 @@
+{
+  "version": "v0",
+  "revision": "1",
+  "commitTime": "1544824316",
+  "ui": {
+    "label": "Minimum Test DAM",
+    "description": "Minimum Test DAM"
+  },
+  "trustedIssuers": {
+    "test": {
+      "issuer": "https://hydra.example.com/",
+      "clientId": "00000000-0000-0000-0000-000000000000",
+      "ui": {
+        "label": "Test",
+        "description": "Fake OIDC Issuer for testing"
+      }
+    },
+    "ic_dev": {
+      "issuer": "https://ic-dot-example.appspot.com/oidc",
+      "ui": {
+        "label": "IC Dev",
+        "description": "IC Dev passport issuer"
+      }
+    }
+  },
+  "trustedSources": {
+    "the_broad": {
+      "sources": [
+        "https://ga4gh.broadinstitute.org"
+      ],
+      "ui": {
+        "label": "the broad",
+        "description": "the broad visa source"
+      }
+    }
+  },
+  "policies": {
+    "bona_fide": {
+      "anyOf": [
+        {
+          "allOf": [
+            {
+              "type": "ResearcherStatus",
+              "value": "const:https://doi.org/10.1038/s41431-018-0219-y"
+            }
+          ]
+        }
+      ],
+      "ui": {
+        "label": "Bona Fide",
+        "description": "NIH custom Bona Fide reseacher status that makes use of Registered Access Bona Fide status and/or Library Cards",
+        "infoUrl": "https://doi.org/10.1038/s41431-018-0219-y#Sec6"
+      }
+    }
+  },
+  "resources": {
+    "ga4gh-apis": {
+      "views": {
+        "files": {
+          "serviceTemplate": "gcs",
+          "labels": {
+            "version": "Phase 3",
+            "topic": "variants",
+            "partition": "all",
+            "fidelity": "normalized",
+            "geoLocation": "gcp:na/us/us-central1/us-central1-a"
+          },
+          "contentTypes": [
+            "application/bam"
+          ],
+          "items": [
+            {
+              "args": {
+                "project": "ga4gh-apis",
+                "bucket": "ga4gh-apis-controlled-access"
+              }
+            }
+          ],
+          "roles": {
+            "viewer": {
+              "policies": [
+                {"name":"bona_fide"}
+              ]
+            }
+          },
+          "defaultRole": "viewer",
+          "ui": {
+            "label": "File Read",
+            "description": "GCS file read"
+          }
+        }
+      },
+      "maxTokenTtl": "1h",
+      "ui": {
+        "applyUrl": "http://apply.ga4gh-apis.org",
+        "description": "Google demo of GA4GH APIs",
+        "imageUrl": "https://info.ga4gh-apis.org/images/image.jpg",
+        "infoUrl": "http://info.ga4gh-apis.org",
+        "label": "GA4GH APIs",
+        "troubleshootUrl": "http://troubleshoot.ga4gh-apis.org"
+      }
+    }
+  },
+  "serviceTemplates": {
+    "gcs": {
+      "serviceName": "gcs",
+      "roles": {
+        "viewer": {
+          "serviceArgs": {
+            "roles": { "values": ["roles/storage.objectViewer"] }
+          },
+          "damRoleCategories": ["metadata", "list", "read"],
+          "ui": {
+            "label": "File Viewer",
+            "description": "List and read files"
+          }
+        }
+      },
+      "interfaces": {
+        "gcp:gs": "gs://${bucket}",
+        "http:gcp:gs": "https://www.googleapis.com/storage/v1/b/${bucket}"
+      },
+      "ui": {
+        "label": "Google Cloud Storage",
+        "description": "Offers Google Cloud Storage access"
+      }
+    }
+  },
+  "visaTypes": {
+    "ResearcherStatus": {
+      "ui": {
+        "label": "Bona Fide Researcher Status",
+        "description": "Canonical URLs that indicate that the person has been acknowledged to be a bona fide researcher",
+        "infoUrl": "https://bit.ly/ga4gh-passport-v1#researcherstatus"
+      }
+    }
+  },
+  "testPersonas": {
+    "non-admin": {
+      "ui": {
+        "label": "Non Admin"
+      },
+      "passport": {
+        "standardClaims": {
+          "iss": "https://ic-dot-example.appspot.com/oidc",
+          "email": "non-admin@faculty.example.edu"
+        },
+        "ga4ghAssertions": []
+      }
+    },
+    "admin": {
+      "ui": {
+        "label": "Admin"
+      },
+      "passport": {
+        "standardClaims": {
+          "iss": "https://ic-dot-example.appspot.com/oidc",
+          "email": "admin@faculty.example.edu"
+        },
+        "ga4ghAssertions": []
+      }
+    },
+    "dr_joe_elixir": {
+      "ui": {
+        "label": "Dr. Joe"
+      },
+      "passport": {
+        "standardClaims": {
+          "iss": "https://ic-dot-example.appspot.com/oidc",
+          "email": "dr_joe@faculty.example.edu"
+        },
+        "ga4ghAssertions": [
+          {
+            "type": "ResearcherStatus",
+            "source": "https://ga4gh.broadinstitute.org",
+            "value": "https://doi.org/10.1038/s41431-018-0219-y",
+            "assertedDuration": "1d",
+            "expiresDuration": "30d",
+            "by": "peer"
+          }
+        ]
+      },
+      "access" : ["ga4gh-apis/files/viewer"]
+    },
+    "undergrad_candice": {
+      "ui": {
+        "label": "Undergrad Candice"
+      },
+      "passport": {
+        "standardClaims": {
+          "iss": "https://login.elixir-czech.org/oidc/",
+          "email": "undergrad_candice@uni-heidelberg.de",
+          "picture": "https://www.cl.uni-heidelberg.de/images/siegel_uni_hd_gross.gif",
+          "patient": "candice"
+        },
+        "extraScopes": "patient/*.read patient/*.write"
+      }
+    }
+  },
+  "clients": {
+    "test_client": {
+      "clientId": "00000000-0000-0000-0000-000000000000",
+      "ui": {
+        "label": "Test Client",
+        "description": "Unit test client"
+      },
+      "redirectUris": [
+        "http://example.com"
+      ],
+      "scope": "openid offline ga4gh_passport_v1 profile email identities account_admin",
+      "grantTypes": ["authorization_code", "refresh_token"],
+      "responseTypes": ["token", "code", "id_token"]
+    },
+    "test_client2": {
+      "clientId": "00000000-0000-0000-0000-000000000002",
+      "ui": {
+        "label": "Test Client",
+        "description": "Unit test client 2"
+      },
+      "redirectUris": [
+        "http://example.com"
+      ],
+      "scope": "openid offline ga4gh_passport_v1 profile email identities account_admin",
+      "grantTypes": ["authorization_code"],
+      "responseTypes": ["token", "code", "id_token"]
+    }
+  },
+  "options": {
+    "readOnlyMasterRealm": true,
+    "gcpManagedKeysMaxRequestedTtl": "7d",
+    "gcpManagedKeysPerAccount": 8,
+    "gcpServiceAccountProject": "example-project-id"
+  }
+}
