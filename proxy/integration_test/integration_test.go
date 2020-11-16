@@ -236,6 +236,7 @@ func createOrUpdate(t *testing.T, storeName string, res *resource) {
 }
 
 func TestCreate(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
@@ -304,6 +305,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
@@ -394,6 +396,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestPatch(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
@@ -467,6 +470,7 @@ func TestPatch(t *testing.T) {
 }
 
 func TestRead(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
@@ -544,6 +548,7 @@ func TestRead(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
@@ -597,6 +602,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestPatientEverything(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
@@ -648,6 +654,7 @@ func TestPatientEverything(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
@@ -699,6 +706,7 @@ func TestSearch(t *testing.T) {
 }
 
 func TestExecuteBundle(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
@@ -821,6 +829,7 @@ func TestExecuteBundle(t *testing.T) {
 }
 
 func TestHistory(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
@@ -872,6 +881,7 @@ func TestHistory(t *testing.T) {
 }
 
 func TestUnimplementedMethod(t *testing.T) {
+	t.Parallel()
 	c := setup(t)
 	defer cleanup(t, c)
 
