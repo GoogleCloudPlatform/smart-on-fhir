@@ -97,6 +97,7 @@ var (
 		http.CanonicalHeaderKey("Content-Length"),
 		http.CanonicalHeaderKey("Date"),
 		http.CanonicalHeaderKey("Location"),
+		http.CanonicalHeaderKey("Content-Encoding"),
 	)
 
 	// Transport used in proxy
