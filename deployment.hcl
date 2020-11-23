@@ -319,19 +319,16 @@ template "project_apps" {
         ]
         {{end}}
         "roles/healthcare.datasetViewer" = [
-          "serviceAccount:$${google_service_account.fhiruser.account_id}@{{$prefix}}-{{$env}}-apps.iam.gserviceaccount.com",
           {{if $setup_e2e_test_project}}
           "serviceAccount:$${google_service_account.testuser.account_id}@{{$prefix}}-{{$env}}-apps.iam.gserviceaccount.com",
           {{end}}
         ]
         "roles/healthcare.datasetAdmin" = [
-          "serviceAccount:$${google_service_account.fhiruser.account_id}@{{$prefix}}-{{$env}}-apps.iam.gserviceaccount.com",
           {{if $setup_e2e_test_project}}
           "serviceAccount:$${google_service_account.testuser.account_id}@{{$prefix}}-{{$env}}-apps.iam.gserviceaccount.com",
           {{end}}
         ]
         "roles/healthcare.fhirStoreAdmin" = [
-          "serviceAccount:$${google_service_account.fhiruser.account_id}@{{$prefix}}-{{$env}}-apps.iam.gserviceaccount.com",
           {{if $setup_e2e_test_project}}
           "serviceAccount:$${google_service_account.testuser.account_id}@{{$prefix}}-{{$env}}-apps.iam.gserviceaccount.com",
           {{end}}

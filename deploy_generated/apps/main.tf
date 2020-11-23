@@ -124,16 +124,7 @@ module "project_iam_members" {
   mode     = "additive"
 
   bindings = {
-    "roles/healthcare.datasetAdmin" = [
-      "serviceAccount:${google_service_account.fhiruser.account_id}@sof-test-apps.iam.gserviceaccount.com",
-    ],
-    "roles/healthcare.datasetViewer" = [
-      "serviceAccount:${google_service_account.fhiruser.account_id}@sof-test-apps.iam.gserviceaccount.com",
-    ],
     "roles/healthcare.fhirResourceEditor" = [
-      "serviceAccount:${google_service_account.fhiruser.account_id}@sof-test-apps.iam.gserviceaccount.com",
-    ],
-    "roles/healthcare.fhirStoreAdmin" = [
       "serviceAccount:${google_service_account.fhiruser.account_id}@sof-test-apps.iam.gserviceaccount.com",
     ],
     "roles/iam.serviceAccountTokenCreator" = [
