@@ -1,0 +1,55 @@
+{
+  "testPersonas": {
+    "dr_joe_elixir": {
+      "ui": {
+        "label": "Dr. Joe (Elixir)"
+      },
+      "passport": {
+        "standardClaims": {
+          "iss": "https://login.elixir-czech.org/oidc/",
+          "email": "dr_joe@faculty.uni-heidelberg.de",
+          "patient": "jane",
+          "fhirUser": "dr_joe"
+        }
+      }
+    },
+    "john": {
+      "ui": {
+        "label": "John Persona"
+      },
+      "passport": {
+        "standardClaims": {
+          "iss": "me",
+          "email": "john@me.example.com",
+          "patient": "john"
+        }
+      }
+    },
+    "undergrad_candice": {
+      "ui": {
+        "label": "Undergrad Candice"
+      },
+      "passport": {
+        "standardClaims": {
+          "iss": "https://login.elixir-czech.org/oidc/",
+          "email": "undergrad_candice@uni-heidelberg.de",
+          "patient": "candice"
+        },
+        "extraScopes": "patient/*.read patient/*.write"
+      }
+    },
+    "bill": {
+      "ui": {
+        "label": "Bill"
+      },
+      "passport": {
+        "standardClaims": {
+          "iss": "https://login.elixir-czech.org/oidc/",
+          "email": "undergrad_candice@uni-heidelberg.de",
+          "patient": "jerry",
+          "fhirUser": "bill"
+        }
+      }
+    }
+  }
+}
