@@ -2,9 +2,19 @@
 
 ## SMARTproxy
 
-**IMPORTANT: This service is experimental and is not to be used with production
-systems nor production data. For testing purposes only with synthetic or public
-data.**
+**IMPORTANT: SMART-on-FHIR access controls are only enabled on Google Cloud
+Healthcare FHIR API in private preview (`v1alpha2`) with FHIR stores created on
+or after January 1, 2021 UTC. You should restrict the `ALLOWED_PATH_PREFIX` to
+only match paths for this version.**
+
+*  There are plans to support older FHIR stores in the near future.
+*  If using this proxy with a different API version or on an older store other
+   than what is indicated above, **SMART-on-FHIR access controls will be ignored
+   and access may be granted to all users of the proxy** regardless of SMART
+   patient context or SMART permission scopes.
+*  Note that other tools not using SMART access may use other API versions to
+   populate FHIR content, however the proxy must use `v1alpha2` to enable SMART
+   access for proxy users.
 
 ### Overview
 
