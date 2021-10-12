@@ -37,6 +37,7 @@ import (
 	"github.com/GoogleCloudPlatform/healthcare-federated-access-services/lib/cache" /* copybara-comment: cache */
 	"github.com/GoogleCloudPlatform/healthcare-federated-access-services/lib/cache/rediz" /* copybara-comment: rediz */
 	"github.com/GoogleCloudPlatform/healthcare-federated-access-services/lib/ga4gh" /* copybara-comment: ga4gh */
+	"github.com/GoogleCloudPlatform/healthcare-federated-access-services/lib/httputils" /* copybara-comment: httputils */
 	"github.com/GoogleCloudPlatform/healthcare-federated-access-services/lib/test/fakeoidcissuer" /* copybara-comment: fakeoidcissuer */
 	"github.com/GoogleCloudPlatform/healthcare-federated-access-services/lib/testkeys" /* copybara-comment: testkeys */
 	"github.com/GoogleCloudPlatform/healthcare-federated-access-services/lib/timeutil" /* copybara-comment: timeutil */
@@ -52,6 +53,42 @@ const (
 var (
 	cacheMaxExpiry = 10 * time.Minute
 )
+
+func TestWellKnownSmartConfigure(t *testing.T) {
+	opts := &Options{
+		FhirIssuer:                     issuerURL,
+		Audience:                       issuerURL,
+		AllowedPathPrefix:              []string{"/"},
+		WellKnownAuthorizationEndpoint: "https://example.com/auth",
+		WellKnownTokenEndpoint:         "https://example.com/token",
+		WellKnownCapabilities:          []string{"launch-ehr", "launch-standalone"},
+	}
+	_, srv, _, _, _, _ := setup(t, opts, disableCache)
+
+	r, err := http.NewRequest(http.MethodGet, srv.URL+"/.well-known/smart-configuration", nil)
+	if err != nil {
+		t.Fatalf("NewRequest() failed: %v", err)
+	}
+	resp, err := srv.Client().Do(r)
+	if err != nil {
+		t.Fatalf("Do Request failed: %v", err)
+	}
+
+	got := &WellKnownSmartConfigureResponse{}
+	if err := httputils.DecodeJSON(resp.Body, got); err != nil {
+		t.Fatalf("DecodeJSON failed: %v", err)
+	}
+
+	want := &WellKnownSmartConfigureResponse{
+		AuthorizationEndpoint: "https://example.com/auth",
+		TokenEndpoint:         "https://example.com/token",
+		Capabilities:          []string{"launch-ehr", "launch-standalone"},
+	}
+
+	if d := cmp.Diff(want, got); len(d) > 0 {
+		t.Errorf("/.well-known/smart-configuration response (-want, + got): %s", d)
+	}
+}
 
 func TestFixProxyDirector(t *testing.T) {
 	opts := &Options{FhirIssuer: issuerURL, Audience: issuerURL, AllowedPathPrefix: []string{"/"}}

@@ -73,6 +73,13 @@ type Options struct {
 	// token but it can still validate with oidc userinfo endpoint
 	UseUserinfoToVerifyAccessToken bool
 
+	// WellKnownAuthorizationEndpoint : url to authorize for access token, published to /.well-known/smart-configuration
+	WellKnownAuthorizationEndpoint string
+	// WellKnownTokenEndpoint : url to exchange token using auth code or refresh token for access token, published to /.well-known/smart-configuration
+	WellKnownTokenEndpoint string
+	// WellKnownCapabilities : capabilities of the smart application, published to /.well-known/smart-configuration
+	WellKnownCapabilities []string
+
 	// USE_SECRET_MANAGER : use GCP SecretManager to store client secret and issuer secret.
 	UseSecretManager bool
 }
@@ -138,6 +145,16 @@ func ReadOptionsFromEnv() *Options {
 
 	useUserinfoToVerifyAccessToken := os.Getenv("USE_USERINFO_TO_VERIFY_ACCESSTOKEN") == "true"
 
+	// WELL_KNOWN_AUTHORIZATION_ENDPOINT: url to authorize for access token
+	// example: https://example.com/authoriize
+	wellKnownAuthorizationEndpoint := osenv.MustVar("WELL_KNOWN_AUTHORIZATION_ENDPOINT")
+	// WELL_KNOWN_TOKEN_ENDPOINT: url to exchange token using auth code or refresh token for access token
+	// example: https://example.com/token
+	wellKnownTokenEndpoint := osenv.MustVar("WELL_KNOWN_TOKEN_ENDPOINT")
+	// WELL_KNOWN_CAPABILITIES: a comma-delimited set of capabilities,
+	// see https://hl7.org/fhir/smart-app-launch/conformance/index.html#capability-sets
+	wellKnownCapabilities := splitValuesByCommas(osenv.MustVar("WELL_KNOWN_CAPABILITIES"))
+
 	// USE_SECRET_MANAGER : use GCP SecretManager to store client secret and issuer secret.
 	useSecretManager := os.Getenv("USE_SECRET_MANAGER") == "true"
 
@@ -153,6 +170,9 @@ func ReadOptionsFromEnv() *Options {
 		RemoveScopes:                   stringset.New(removeScopes...),
 		UseUserinfoToVerifyAccessToken: useUserinfoToVerifyAccessToken,
 		UseSecretManager:               useSecretManager,
+		WellKnownAuthorizationEndpoint: wellKnownAuthorizationEndpoint,
+		WellKnownTokenEndpoint:         wellKnownTokenEndpoint,
+		WellKnownCapabilities:          wellKnownCapabilities,
 	}
 }
 

@@ -58,6 +58,12 @@ spec:
               value: {{.cache_addr}}
             - name: USE_SECRET_MANAGER
               value: "{{.use_secret_manager}}"
+            - name: WELL_KNOWN_AUTHORIZATION_ENDPOINT
+              value: "{{.OIDC_ISSUER_AUTH_URL}}"
+            - name: WELL_KNOWN_TOKEN_ENDPOINT:
+              value: "{{.OIDC_ISSUER_TOKEN_URL}}"
+            - name: WELL_KNOWN_CAPABILITIES:
+              value: "{{.SMART_CAPABILITIES}}"
           readinessProbe:
             httpGet:
               port: 8080

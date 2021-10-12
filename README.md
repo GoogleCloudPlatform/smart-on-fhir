@@ -54,6 +54,12 @@ SMARTproxy offers the following configuration parameters:
 - `REMOVE_SCOPES`: a comma-delimited set of scopes to remove from the
   `X-Authorization-Scope` header that the proxy includes in its requests to
   downstream servers.
+- `WELL_KNOWN_AUTHORIZATION_ENDPOINT`: url to authorize for access token.
+  Example: https://example.com/authoriize, it can be found on https://${FHIR_ISSUER}/.well-known/oidc-configuration
+- `WELL_KNOWN_TOKEN_ENDPOINT`: url to exchange token using auth code or refresh
+  token for access token. Example: https://example.com/token, it can be found on https://${FHIR_ISSUER}/.well-known/oidc-configuration
+- `WELL_KNOWN_CAPABILITIES`: a comma-delimited set of capabilities,
+  see https://hl7.org/fhir/smart-app-launch/conformance/index.html#capability-sets
 
 #### Reduce audit log
 

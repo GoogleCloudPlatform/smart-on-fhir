@@ -147,6 +147,7 @@ func New(ctx context.Context, r *mux.Router, opts *Options, logger *logging.Clie
 	s.fhirProxy.Transport = Transport
 
 	checker := auth.NewChecker(logger, opts.FhirIssuer, nil, nil, nil, opts.UseUserinfoToVerifyAccessToken, cacheClient)
+	r.PathPrefix("/.well-known/smart-configuration").HandlerFunc(auth.MustWithAuth(s.wellKnownSmartConfigure, checker, auth.RequireNone))
 	r.PathPrefix("/").HandlerFunc(auth.MustWithAuth(s.proxy, checker, auth.Require{Role: auth.User, SelfClientID: opts.Audience}))
 
 	return s, nil
@@ -167,6 +168,24 @@ type Service struct {
 	gcpAccessTokenFetchLock     sync.Mutex
 	secretManagerClient         SecretManagerClient
 	cache                       cache.Client
+}
+
+// WellKnownSmartConfigureResponse response of /.well-known/smart-configuration
+type WellKnownSmartConfigureResponse struct {
+	AuthorizationEndpoint string   `json:"authorization_endpoint"`
+	TokenEndpoint         string   `json:"token_endpoint"`
+	Capabilities          []string `json:"capabilities"`
+}
+
+func (s *Service) wellKnownSmartConfigure(w http.ResponseWriter, r *http.Request) {
+	res := &WellKnownSmartConfigureResponse{
+		AuthorizationEndpoint: s.opts.WellKnownAuthorizationEndpoint,
+		TokenEndpoint:         s.opts.WellKnownTokenEndpoint,
+		Capabilities:          s.opts.WellKnownCapabilities,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	httputils.WriteCorsHeaders(w)
+	httputils.EncodeJSON(w, res)
 }
 
 func (s *Service) proxy(w http.ResponseWriter, r *http.Request) {
