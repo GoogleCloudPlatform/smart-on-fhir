@@ -28,10 +28,10 @@ import (
 
 	"github.com/google/go-cmp/cmp" /* copybara-comment */
 	"github.com/googleapis/gax-go/v2" /* copybara-comment */
+	"google3/third_party/golang/github_com/alicebob/miniredis/v/v2/miniredis"
 	"github.com/gorilla/mux" /* copybara-comment */
 	"google.golang.org/grpc/codes" /* copybara-comment */
 	"google.golang.org/grpc/status" /* copybara-comment */
-	"github.com/alicebob/miniredis" /* copybara-comment */
 	"bitbucket.org/creachadair/stringset" /* copybara-comment */
 	"github.com/GoogleCloudPlatform/healthcare-federated-access-services/lib/auth" /* copybara-comment: auth */
 	"github.com/GoogleCloudPlatform/healthcare-federated-access-services/lib/cache" /* copybara-comment: cache */
