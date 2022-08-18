@@ -276,12 +276,11 @@ func TestProxy(t *testing.T) {
 }
 
 func TestFhirHeader(t *testing.T) {
-	claims := simpleClaims("")
-
 	tests := []struct {
 		name        string
 		opts        *Options
 		header      map[string]string
+		scope       string
 		wantHeaders http.Header
 	}{
 		{
@@ -340,6 +339,36 @@ func TestFhirHeader(t *testing.T) {
 				"X-Host":                   {"example.com"},
 			},
 		},
+		{
+			name:   "smart-on-fhir and consent scopes",
+			opts:   &Options{FhirIssuer: issuerURL, Audience: issuerURL, ClientsOfProxy: map[string]string{"id": "secret"}, AllowedPathPrefix: []string{"/"}},
+			header: map[string]string{"X-Client-Id": "id", "X-Client-Secret": "secret"},
+			scope:  "consent/actor/Practitioner/123 observation/*.write purp/v3/TREAT env/app/X random_scope",
+			wantHeaders: http.Header{
+				"Authorization":            {"Bearer this-is-a-token"},
+				"X-Authorization-Issuer":   {"https://issuer.example.com"},
+				"X-Authorization-Patient":  {"user-1"},
+				"X-Authorization-Scope":    {"observation/*.write random_scope"},
+				"X-Authorization-Subject":  {"sub"},
+				"X-Authorization-Token-Id": {"token-id"},
+				"X-Client-Id":              {"id"},
+				"X-Host":                   {"example.com"},
+				"X-Consent-Scope":          {"consent/actor/Practitioner/123 purp/v3/TREAT env/app/X"},
+			},
+		},
+		{
+			name:   "only consent scopes",
+			opts:   &Options{FhirIssuer: issuerURL, Audience: issuerURL, ClientsOfProxy: map[string]string{"id": "secret"}, AllowedPathPrefix: []string{"/"}},
+			header: map[string]string{"X-Client-Id": "id", "X-Client-Secret": "secret"},
+			scope:  "consent/actor/Practitioner/123 purp/v3/ETREAT",
+			wantHeaders: http.Header{
+				"Authorization":            {"Bearer this-is-a-token"},
+				"X-Authorization-Token-Id": {"token-id"},
+				"X-Client-Id":              {"id"},
+				"X-Host":                   {"example.com"},
+				"X-Consent-Scope":          {"consent/actor/Practitioner/123 purp/v3/ETREAT"},
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -347,6 +376,7 @@ func TestFhirHeader(t *testing.T) {
 			_, srv, fake, iam, oidc, _ := setup(t, tc.opts, disableCache)
 			iam.reset()
 
+			claims := simpleClaims(tc.scope)
 			tok, err := oidc.Sign(nil, claims)
 			if err != nil {
 				t.Fatalf("oidc.Sign() failed: %v", err)
@@ -814,7 +844,7 @@ func TestRequestHeaderFilter(t *testing.T) {
 	wantHeaders.Set(fhirIssuerHeader, "https://issuer.example.com")
 	wantHeaders.Set(fhirPatientHeader, "user-1")
 	wantHeaders.Set(fhirTokenIDHeader, "token-id")
-	wantHeaders.Set(fhirScopeHeader, "openid offline patient/*.read")
+	wantHeaders.Set(authScopeHeader, "openid offline patient/*.read")
 
 	if d := cmp.Diff(wantHeaders, fake.req.Header); len(d) > 0 {
 		t.Errorf("Request header to backend (-want, +got): %s", d)
@@ -1102,7 +1132,7 @@ func TestScopeParse(t *testing.T) {
 				t.Fatalf("Do Request failed: %v", err)
 			}
 
-			got := fake.req.Header.Get(fhirScopeHeader)
+			got := fake.req.Header.Get(authScopeHeader)
 			if d := cmp.Diff(tc.wantScope, got); len(d) > 0 {
 				t.Errorf("scope in header (-want, +got): %s", d)
 			}

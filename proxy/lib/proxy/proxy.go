@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -48,7 +49,8 @@ const (
 	fhirIssuerHeader   = "X-Authorization-Issuer"
 	fhirPatientHeader  = "X-Authorization-Patient"
 	fhirTokenIDHeader  = "X-Authorization-Token-Id"
-	fhirScopeHeader    = "X-Authorization-Scope"
+	authScopeHeader    = "X-Authorization-Scope"
+	consentScopeHeader = "X-Consent-Scope"
 
 	// gcpAccessTokenLifeTime is the life time used to request new token.
 	gcpAccessTokenLifeTime = 15 * time.Minute
@@ -88,7 +90,8 @@ var (
 		http.CanonicalHeaderKey(fhirIssuerHeader),
 		http.CanonicalHeaderKey(fhirPatientHeader),
 		http.CanonicalHeaderKey(fhirTokenIDHeader),
-		http.CanonicalHeaderKey(fhirScopeHeader),
+		http.CanonicalHeaderKey(authScopeHeader),
+		http.CanonicalHeaderKey(consentScopeHeader),
 	)
 	allowedResponseHeader = stringset.New(
 		http.CanonicalHeaderKey("ETag"),
@@ -102,6 +105,9 @@ var (
 
 	// Transport used in proxy
 	Transport = http.DefaultTransport
+
+	// Consent scopes pattern
+	consentScopePattern = regexp.MustCompile(`^(consent/)?(actor|purp|env)/.+$`)
 )
 
 // New adds the proxy to server router.
@@ -346,19 +352,32 @@ func resourceName0fSA(sa string) string {
 
 func idToFhirHeader(id *ga4gh.Identity, removeScopes stringset.Set, r *http.Request) {
 	r.Header.Del(clientSecretHeader)
-	r.Header.Set(fhirSubjectHeader, id.Subject)
-	r.Header.Set(fhirIssuerHeader, id.Issuer)
-	r.Header.Set(fhirPatientHeader, id.Patient)
 	r.Header.Set(fhirTokenIDHeader, id.ID)
 
-	var filteredScope []string
+	var authScope, consentScope []string
 	for _, scope := range strings.Split(id.Scope, " ") {
+		if len(scope) == 0 {
+			continue
+		}
 		if removeScopes.Contains(scope) {
 			continue
 		}
-		filteredScope = append(filteredScope, scope)
+		if consentScopePattern.MatchString(scope) {
+			consentScope = append(consentScope, scope)
+		} else {
+			authScope = append(authScope, scope)
+		}
 	}
-	r.Header.Set(fhirScopeHeader, strings.Join(filteredScope, " "))
+	if len(authScope) > 0 {
+		r.Header.Set(authScopeHeader, strings.Join(authScope, " "))
+		// TODO: consider always populating these headers.
+		r.Header.Set(fhirSubjectHeader, id.Subject)
+		r.Header.Set(fhirIssuerHeader, id.Issuer)
+		r.Header.Set(fhirPatientHeader, id.Patient)
+	}
+	if len(consentScope) > 0 {
+		r.Header.Set(consentScopeHeader, strings.Join(consentScope, " "))
+	}
 }
 
 func (s *Service) verifyClientCredentials(r *http.Request) error {

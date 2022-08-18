@@ -65,8 +65,8 @@ type Options struct {
 	ClientsOfProxy map[string]string
 
 	// RemoveScopes : a set of scopes to remove from the
-	// X-Authorization-Scope header that the proxy includes in its requests
-	// to downstream servers.
+	// X-Authorization-Scope and X-Consent-Scope headers that the proxy
+	// includes in its requests to downstream servers.
 	RemoveScopes stringset.Set
 
 	// UseUserinfoToVerifyAccessToken : access token to the proxy maybe opaque
