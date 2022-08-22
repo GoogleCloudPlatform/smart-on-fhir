@@ -131,8 +131,8 @@ func TestFixProxyDirector(t *testing.T) {
 	}
 
 	wantXHost := r.Host
-	if fake.req.Header.Get("X-Host") != wantXHost {
-		t.Errorf("r.Header(X-Host) = %q, wants %q", fake.req.Header.Get("X-Host"), wantXHost)
+	if fake.req.Header.Get("X-Forwarded-Host") != wantXHost {
+		t.Errorf("r.Header(X-Forwarded-Host) = %q, wants %q", fake.req.Header.Get("X-Forwarded-Host"), wantXHost)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -170,7 +170,7 @@ func TestProxy(t *testing.T) {
 			path:        "/",
 			respStatus:  http.StatusOK,
 			respContent: "okbody",
-			wantReq:     regexp.MustCompile(`(?s)GET /.*?X-Host: .*?`),
+			wantReq:     regexp.MustCompile(`(?s)GET /.*?X-Forwarded-Host: .*?`),
 			wantResp:    regexp.MustCompile(`(?s).*?200 OK.*?okbody$`),
 		},
 		{
@@ -180,7 +180,7 @@ func TestProxy(t *testing.T) {
 			path:        "",
 			respStatus:  http.StatusOK,
 			respContent: "okbody",
-			wantReq:     regexp.MustCompile(`(?s)GET /.*?X-Host: .*?`),
+			wantReq:     regexp.MustCompile(`(?s)GET /.*?X-Forwarded-Host: .*?`),
 			wantResp:    regexp.MustCompile(`(?s).*?200 OK.*?okbody$`),
 		},
 		{
@@ -293,7 +293,8 @@ func TestFhirHeader(t *testing.T) {
 				"X-Authorization-Scope":    {"openid offline patient/*.read"},
 				"X-Authorization-Subject":  {"sub"},
 				"X-Authorization-Token-Id": {"token-id"},
-				"X-Host":                   {"example.com"},
+				"X-Forwarded-Host":         {"example.com"},
+				"X-Forwarded-Proto":        {"http"},
 			},
 		},
 		{
@@ -306,7 +307,8 @@ func TestFhirHeader(t *testing.T) {
 				"X-Authorization-Scope":    {"offline patient/*.read"},
 				"X-Authorization-Subject":  {"sub"},
 				"X-Authorization-Token-Id": {"token-id"},
-				"X-Host":                   {"example.com"},
+				"X-Forwarded-Host":         {"example.com"},
+				"X-Forwarded-Proto":        {"http"},
 			},
 		},
 		{
@@ -321,7 +323,8 @@ func TestFhirHeader(t *testing.T) {
 				"X-Authorization-Scope":    {"openid offline patient/*.read"},
 				"X-Authorization-Subject":  {"sub"},
 				"X-Authorization-Token-Id": {"token-id"},
-				"X-Host":                   {"example.com"},
+				"X-Forwarded-Host":         {"example.com"},
+				"X-Forwarded-Proto":        {"http"},
 			},
 		},
 		{
@@ -336,7 +339,8 @@ func TestFhirHeader(t *testing.T) {
 				"X-Authorization-Subject":  {"sub"},
 				"X-Authorization-Token-Id": {"token-id"},
 				"X-Client-Id":              {"id"},
-				"X-Host":                   {"example.com"},
+				"X-Forwarded-Host":         {"example.com"},
+				"X-Forwarded-Proto":        {"http"},
 			},
 		},
 		{
@@ -352,7 +356,8 @@ func TestFhirHeader(t *testing.T) {
 				"X-Authorization-Subject":  {"sub"},
 				"X-Authorization-Token-Id": {"token-id"},
 				"X-Client-Id":              {"id"},
-				"X-Host":                   {"example.com"},
+				"X-Forwarded-Host":         {"example.com"},
+				"X-Forwarded-Proto":        {"http"},
 				"X-Consent-Scope":          {"consent/actor/Practitioner/123 purp/v3/TREAT env/app/X"},
 			},
 		},
@@ -365,7 +370,8 @@ func TestFhirHeader(t *testing.T) {
 				"Authorization":            {"Bearer this-is-a-token"},
 				"X-Authorization-Token-Id": {"token-id"},
 				"X-Client-Id":              {"id"},
-				"X-Host":                   {"example.com"},
+				"X-Forwarded-Host":         {"example.com"},
+				"X-Forwarded-Proto":        {"http"},
 				"X-Consent-Scope":          {"consent/actor/Practitioner/123 purp/v3/ETREAT"},
 			},
 		},
@@ -807,7 +813,7 @@ func TestRequestHeaderFilter(t *testing.T) {
 		// GCLB header
 		"Via":                    []string{"v"},
 		"X-Forwarded-For":        []string{"http://example.com"},
-		"X-Forwarded-Proto":      []string{"v"},
+		"X-Forwarded-Proto":      []string{"http"},
 		"X-Cloud-Trace-Context":  []string{"v"},
 		"X-Http-Method-Override": []string{"v"},
 	}
@@ -839,7 +845,7 @@ func TestRequestHeaderFilter(t *testing.T) {
 
 	// Smart on FHIR header
 	wantHeaders.Set("X-Forwarded-For", "http://example.com, "+host)
-	wantHeaders.Set("X-Host", u.Host)
+	wantHeaders.Set("X-Forwarded-Host", u.Host)
 	wantHeaders.Set(fhirSubjectHeader, "sub")
 	wantHeaders.Set(fhirIssuerHeader, "https://issuer.example.com")
 	wantHeaders.Set(fhirPatientHeader, "user-1")

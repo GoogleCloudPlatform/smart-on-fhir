@@ -83,7 +83,7 @@ var (
 		http.CanonicalHeaderKey("X-Cloud-Trace-Context"),
 		http.CanonicalHeaderKey("X-HTTP-Method-Override"),
 		// Smart on FHIR header
-		http.CanonicalHeaderKey("X-Host"),
+		http.CanonicalHeaderKey("X-Forwarded-Host"),
 		http.CanonicalHeaderKey(clientIDHeader),
 		http.CanonicalHeaderKey(clientSecretHeader),
 		http.CanonicalHeaderKey(fhirSubjectHeader),
@@ -445,12 +445,21 @@ func fixHostInProxyDirector(r *http.Request, host string) {
 	// Because golang ReverseProxy is using req.Host if it is not empty to make
 	// the request to backend. But setting req.Host may also overwrite the Host
 	// in the header, depends on http/1 or http/2. https://golang.org/pkg/net/http/#Request
-	// In this func, we copy the host to header Host and X-Host for more
-	// footprint, then overwrite the req.Host with req.URL.Host because req.URL.Host
-	// has set by defaultDirector.
+	// In this func, we copy the host to header Host and X-Forwarded-Host for more
+	// footprint and we set the X-Forwarded-Proto header if not set, then overwrite
+	// the req.Host with req.URL.Host because req.URL.Host has set by defaultDirector.
 	// This workaround will not break even golang ReverseProxy fix this issue.
-	if len(r.Header.Get("X-Host")) == 0 {
-		r.Header.Set("X-Host", host)
+	// In Go 1.20, the X-Forwarded-Host and X-Forwarded-Proto headers are set by
+	// default (see https://github.com/golang/go/issues/50465)
+	if len(r.Header.Get("X-Forwarded-Host")) == 0 {
+		r.Header.Set("X-Forwarded-Host", host)
+	}
+	if len(r.Header.Get("X-Forwarded-Proto")) == 0 {
+		if r.TLS == nil {
+			r.Header.Set("X-Forwarded-Proto", "http")
+		} else {
+			r.Header.Set("X-Forwarded-Proto", "https")
+		}
 	}
 	r.Header.Set("Host", host)
 	r.Host = r.URL.Host
