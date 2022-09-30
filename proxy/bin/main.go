@@ -22,7 +22,7 @@ import (
 	"os/signal"
 
 	"cloud.google.com/go/logging" /* copybara-comment */
-	"cloud.google.com/go/secretmanager/apiv1" /* copybara-comment: secretmanager */
+	"cloud.google.com/go/secretmanager/apiv1" /* copybara-comment */
 	"google.golang.org/api/option" /* copybara-comment: option */
 	"github.com/gorilla/mux" /* copybara-comment */
 	"google.golang.org/grpc" /* copybara-comment */
