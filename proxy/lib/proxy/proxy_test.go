@@ -347,7 +347,7 @@ func TestFhirHeader(t *testing.T) {
 			name:   "smart-on-fhir and consent scopes",
 			opts:   &Options{FhirIssuer: issuerURL, Audience: issuerURL, ClientsOfProxy: map[string]string{"id": "secret"}, AllowedPathPrefix: []string{"/"}},
 			header: map[string]string{"X-Client-Id": "id", "X-Client-Secret": "secret"},
-			scope:  "consent/actor/Practitioner/123 observation/*.write purp/v3/TREAT env/app/X random_scope",
+			scope:  "actor/Practitioner/123 observation/*.write purp/v3/TREAT env/app/X random_scope",
 			wantHeaders: http.Header{
 				"Authorization":            {"Bearer this-is-a-token"},
 				"X-Authorization-Issuer":   {"https://issuer.example.com"},
@@ -358,21 +358,21 @@ func TestFhirHeader(t *testing.T) {
 				"X-Client-Id":              {"id"},
 				"X-Forwarded-Host":         {"example.com"},
 				"X-Forwarded-Proto":        {"http"},
-				"X-Consent-Scope":          {"consent/actor/Practitioner/123 purp/v3/TREAT env/app/X"},
+				"X-Consent-Scope":          {"actor/Practitioner/123 purp/v3/TREAT env/app/X"},
 			},
 		},
 		{
 			name:   "only consent scopes",
 			opts:   &Options{FhirIssuer: issuerURL, Audience: issuerURL, ClientsOfProxy: map[string]string{"id": "secret"}, AllowedPathPrefix: []string{"/"}},
 			header: map[string]string{"X-Client-Id": "id", "X-Client-Secret": "secret"},
-			scope:  "consent/actor/Practitioner/123 purp/v3/ETREAT",
+			scope:  "btg actor/Practitioner/123 purp/v3/ETREAT",
 			wantHeaders: http.Header{
 				"Authorization":            {"Bearer this-is-a-token"},
 				"X-Authorization-Token-Id": {"token-id"},
 				"X-Client-Id":              {"id"},
 				"X-Forwarded-Host":         {"example.com"},
 				"X-Forwarded-Proto":        {"http"},
-				"X-Consent-Scope":          {"consent/actor/Practitioner/123 purp/v3/ETREAT"},
+				"X-Consent-Scope":          {"btg actor/Practitioner/123 purp/v3/ETREAT"},
 			},
 		},
 	}

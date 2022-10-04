@@ -107,7 +107,7 @@ var (
 	Transport = http.DefaultTransport
 
 	// Consent scopes pattern
-	consentScopePattern = regexp.MustCompile(`^(consent/)?(actor|purp|env)/.+$`)
+	consentScopePattern = regexp.MustCompile(`^(btg|bypass|(actor|purp|env)/.+)$`)
 )
 
 // New adds the proxy to server router.
