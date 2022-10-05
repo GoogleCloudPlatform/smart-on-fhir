@@ -28,7 +28,7 @@ import (
 
 	"github.com/google/go-cmp/cmp" /* copybara-comment */
 	"github.com/googleapis/gax-go/v2" /* copybara-comment */
-	"google3/third_party/golang/github_com/alicebob/miniredis/v/v2/miniredis"
+	"github.com/alicebob/miniredis" /* copybara-comment */
 	"github.com/gorilla/mux" /* copybara-comment */
 	"google.golang.org/grpc/codes" /* copybara-comment */
 	"google.golang.org/grpc/status" /* copybara-comment */
