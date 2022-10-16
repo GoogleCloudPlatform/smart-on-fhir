@@ -35,7 +35,7 @@ import (
 	"github.com/GoogleCloudPlatform/smart-on-fhir/proxy/lib/proxy" /* copybara-comment: proxy */
 
 	glog "github.com/golang/glog" /* copybara-comment */
-	iamcreds "cloud.google.com/go/iam/credentials/apiv1" /* copybara-comment: credentials */
+	iamcreds "cloud.google.com/go/iam/credentials/apiv1" /* copybara-comment */
 	grpcbackoff "google.golang.org/grpc/backoff" /* copybara-comment */
 )
 
