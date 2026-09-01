@@ -368,6 +368,9 @@ func TestFhirHeader(t *testing.T) {
 			scope:  "btg actor/Practitioner/123 purp/v3/ETREAT",
 			wantHeaders: http.Header{
 				"Authorization":            {"Bearer this-is-a-token"},
+				"X-Authorization-Issuer":   {"https://issuer.example.com"},
+				"X-Authorization-Patient":  {"user-1"},
+				"X-Authorization-Subject":  {"sub"},
 				"X-Authorization-Token-Id": {"token-id"},
 				"X-Client-Id":              {"id"},
 				"X-Forwarded-Host":         {"example.com"},
@@ -1295,4 +1298,77 @@ type fakeSecretClient struct {
 
 func (s *fakeSecretClient) GetSecret(ctx context.Context, key string) (string, error) {
 	return "secret_for_" + key, nil
+}
+
+func TestVerifyRequestPath_ConfusedDeputyIAM(t *testing.T) {
+	srv := &Service{
+		opts: &Options{
+			AllowedPathPrefix: []string{"/v1/projects/proj/locations/loc/datasets/ds/fhirStores/store"},
+		},
+	}
+	blockedPaths := []string{
+		"/v1/projects/proj/locations/loc/datasets/ds/fhirStores/store:setIamPolicy",
+		"/v1/projects/proj/locations/loc/datasets/ds/fhirStores/store:getIamPolicy",
+		"/v1/projects/proj/locations/loc/datasets/ds/fhirStores/store:testIamPermissions",
+	}
+	for _, p := range blockedPaths {
+		r, _ := http.NewRequest("GET", p, nil)
+		if err := srv.verifyRequestPath(r); err == nil {
+			t.Errorf("verifyRequestPath(%q) expected error, got nil", p)
+		}
+	}
+}
+
+func TestVerifyRequestPath_SegmentBoundary(t *testing.T) {
+	srv := &Service{
+		opts: &Options{
+			AllowedPathPrefix: []string{"/v1/projects/proj/locations/loc/datasets/ds"},
+		},
+	}
+	allowed := "/v1/projects/proj/locations/loc/datasets/ds/fhirStores/store/fhir/Patient/1"
+	r, _ := http.NewRequest("GET", allowed, nil)
+	if err := srv.verifyRequestPath(r); err != nil {
+		t.Errorf("verifyRequestPath(%q) unexpected error: %v", allowed, err)
+	}
+
+	disallowed := "/v1/projects/proj/locations/loc/datasets/ds2/fhirStores/store/fhir/Patient/1"
+	r2, _ := http.NewRequest("GET", disallowed, nil)
+	if err := srv.verifyRequestPath(r2); err == nil {
+		t.Errorf("verifyRequestPath(%q) expected error, got nil", disallowed)
+	}
+}
+
+func TestIdToFhirHeader_HeaderSpoofing(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/", nil)
+	r.Header.Set(authScopeHeader, "system/Patient.write")
+	r.Header.Set(fhirSubjectHeader, "spoofed-user")
+
+	id := &ga4gh.Identity{
+		ID:      "token-id",
+		Scope:   "  patient/Observation.read   openid   ",
+		Subject: "legit-user",
+		Patient: "mario",
+	}
+
+	removeScopes := stringset.New("openid")
+	err := idToFhirHeader(id, removeScopes, r)
+	if err != nil {
+		t.Fatalf("idToFhirHeader() unexpected error: %v", err)
+	}
+
+	if r.Header.Get(authScopeHeader) != "patient/Observation.read" {
+		t.Errorf("got %q, want patient/Observation.read", r.Header.Get(authScopeHeader))
+	}
+	if r.Header.Get(fhirSubjectHeader) != "legit-user" {
+		t.Errorf("got %q, want legit-user", r.Header.Get(fhirSubjectHeader))
+	}
+
+	// Verify zero remaining scopes returns an error.
+	idOnlyOpenid := &ga4gh.Identity{
+		ID:    "token-id",
+		Scope: "openid",
+	}
+	if err := idToFhirHeader(idOnlyOpenid, removeScopes, r); err == nil {
+		t.Errorf("idToFhirHeader() with zero remaining scopes expected error, got nil")
+	}
 }

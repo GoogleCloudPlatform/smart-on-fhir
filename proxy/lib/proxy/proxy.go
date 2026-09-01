@@ -221,7 +221,10 @@ func (s *Service) proxy(w http.ResponseWriter, r *http.Request) {
 
 	cloned.Header.Set("Authorization", "Bearer "+tok)
 
-	idToFhirHeader(a.ID, s.opts.RemoveScopes, cloned)
+	if err := idToFhirHeader(a.ID, s.opts.RemoveScopes, cloned); err != nil {
+		httputils.WriteError(w, err)
+		return
+	}
 
 	s.fhirProxy.ServeHTTP(w, cloned)
 }
@@ -350,15 +353,20 @@ func resourceName0fSA(sa string) string {
 	return fmt.Sprintf("projects/-/serviceAccounts/%s", sa)
 }
 
-func idToFhirHeader(id *ga4gh.Identity, removeScopes stringset.Set, r *http.Request) {
+func idToFhirHeader(id *ga4gh.Identity, removeScopes stringset.Set, r *http.Request) error {
+	// Unconditionally delete all inbound SMART headers to prevent header spoofing (b/546660220).
 	r.Header.Del(clientSecretHeader)
+	r.Header.Del(authScopeHeader)
+	r.Header.Del(consentScopeHeader)
+	r.Header.Del(fhirSubjectHeader)
+	r.Header.Del(fhirIssuerHeader)
+	r.Header.Del(fhirPatientHeader)
+	r.Header.Del(fhirTokenIDHeader)
+
 	r.Header.Set(fhirTokenIDHeader, id.ID)
 
 	var authScope, consentScope []string
-	for _, scope := range strings.Split(id.Scope, " ") {
-		if len(scope) == 0 {
-			continue
-		}
+	for _, scope := range strings.Fields(id.Scope) {
 		if removeScopes.Contains(scope) {
 			continue
 		}
@@ -368,16 +376,22 @@ func idToFhirHeader(id *ga4gh.Identity, removeScopes stringset.Set, r *http.Requ
 			authScope = append(authScope, scope)
 		}
 	}
+	if len(authScope) == 0 && len(consentScope) == 0 {
+		return status.Errorf(codes.PermissionDenied, "no valid SMART authorization scopes remaining after scope filtering")
+	}
+
+	// Always populate identity headers whenever any valid scope remains (b/240425915).
+	r.Header.Set(fhirSubjectHeader, id.Subject)
+	r.Header.Set(fhirIssuerHeader, id.Issuer)
+	r.Header.Set(fhirPatientHeader, id.Patient)
+
 	if len(authScope) > 0 {
 		r.Header.Set(authScopeHeader, strings.Join(authScope, " "))
-		// TODO: consider always populating these headers.
-		r.Header.Set(fhirSubjectHeader, id.Subject)
-		r.Header.Set(fhirIssuerHeader, id.Issuer)
-		r.Header.Set(fhirPatientHeader, id.Patient)
 	}
 	if len(consentScope) > 0 {
 		r.Header.Set(consentScopeHeader, strings.Join(consentScope, " "))
 	}
+	return nil
 }
 
 func (s *Service) verifyClientCredentials(r *http.Request) error {
@@ -410,10 +424,20 @@ func (s *Service) verifyClientCredentials(r *http.Request) error {
 }
 
 func (s *Service) verifyRequestPath(r *http.Request) error {
-	// TODO: consider use trie to improve the performance.
+	// Reject control-plane IAM methods to prevent Confused Deputy attacks (b/546660220).
+	path := r.URL.Path
+	if strings.Contains(path, ":setIamPolicy") ||
+		strings.Contains(path, ":getIamPolicy") ||
+		strings.Contains(path, ":testIamPermissions") {
+		return status.Errorf(codes.PermissionDenied, "control-plane IAM methods are not permitted via SMART proxy: %q", path)
+	}
+
 	for _, prefix := range s.opts.AllowedPathPrefix {
-		if strings.HasPrefix(r.URL.Path, prefix) {
-			return nil
+		if strings.HasPrefix(path, prefix) {
+			remainder := path[len(prefix):]
+			if len(remainder) == 0 || remainder[0] == '/' || prefix[len(prefix)-1] == '/' {
+				return nil
+			}
 		}
 	}
 	return status.Errorf(codes.NotFound, "path %q not found", r.URL.Path)
