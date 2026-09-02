@@ -380,13 +380,13 @@ func idToFhirHeader(id *ga4gh.Identity, removeScopes stringset.Set, r *http.Requ
 		return status.Errorf(codes.PermissionDenied, "no valid SMART authorization scopes remaining after scope filtering")
 	}
 
-	// Always populate identity headers whenever any valid scope remains (b/240425915).
-	r.Header.Set(fhirSubjectHeader, id.Subject)
-	r.Header.Set(fhirIssuerHeader, id.Issuer)
-	r.Header.Set(fhirPatientHeader, id.Patient)
-
 	if len(authScope) > 0 {
 		r.Header.Set(authScopeHeader, strings.Join(authScope, " "))
+		// Populate identity headers only when auth scopes are present; Cloud Healthcare
+		// API requires X-Authorization-Scope whenever X-Authorization-Subject is set.
+		r.Header.Set(fhirSubjectHeader, id.Subject)
+		r.Header.Set(fhirIssuerHeader, id.Issuer)
+		r.Header.Set(fhirPatientHeader, id.Patient)
 	}
 	if len(consentScope) > 0 {
 		r.Header.Set(consentScopeHeader, strings.Join(consentScope, " "))

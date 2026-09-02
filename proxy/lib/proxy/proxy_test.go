@@ -368,9 +368,6 @@ func TestFhirHeader(t *testing.T) {
 			scope:  "btg actor/Practitioner/123 purp/v3/ETREAT",
 			wantHeaders: http.Header{
 				"Authorization":            {"Bearer this-is-a-token"},
-				"X-Authorization-Issuer":   {"https://issuer.example.com"},
-				"X-Authorization-Patient":  {"user-1"},
-				"X-Authorization-Subject":  {"sub"},
 				"X-Authorization-Token-Id": {"token-id"},
 				"X-Client-Id":              {"id"},
 				"X-Forwarded-Host":         {"example.com"},
