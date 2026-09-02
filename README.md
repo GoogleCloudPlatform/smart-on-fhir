@@ -96,9 +96,8 @@ It will also set the following permissions:
 - the GAE Service Account (SA) needs `serviceAccountTokenCreator` permissions to
   create short-live access tokens
 - the `fhiruser` SA, which will be used by the proxy to make calls into the
-  FHIR store, needs `healthcare.datasetViewer`, `healthcare.datasetAdmin`,
-  `healthcare.fhirStoreAdmin` and `healthcare.fhirResourceEditor` to access FHIR
-  API
+  FHIR store, needs `healthcare.datasetViewer` and
+  `healthcare.fhirResourceEditor` to access FHIR API
 
 Once the `prepare_project` script completes, you will need to deploy the proxy
 service in your project. It will need to make use of an OIDC server that mints

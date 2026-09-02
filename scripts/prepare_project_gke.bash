@@ -77,10 +77,6 @@ gcloud projects add-iam-policy-binding -q ${PROJECT?} \
 gcloud projects add-iam-policy-binding -q ${PROJECT?} \
   --member serviceAccount:fhiruser@${PROJECT?}.iam.gserviceaccount.com --role roles/healthcare.datasetViewer
 gcloud projects add-iam-policy-binding -q ${PROJECT?} \
-  --member serviceAccount:fhiruser@${PROJECT?}.iam.gserviceaccount.com --role roles/healthcare.datasetAdmin
-gcloud projects add-iam-policy-binding -q ${PROJECT?} \
-  --member serviceAccount:fhiruser@${PROJECT?}.iam.gserviceaccount.com --role roles/healthcare.fhirStoreAdmin
-gcloud projects add-iam-policy-binding -q ${PROJECT?} \
   --member serviceAccount:fhiruser@${PROJECT?}.iam.gserviceaccount.com --role roles/healthcare.fhirResourceEditor
 
 echo -e ${GREEN?}'Reserve a static external IP address'${RESET?}
