@@ -424,12 +424,19 @@ func (s *Service) verifyClientCredentials(r *http.Request) error {
 }
 
 func (s *Service) verifyRequestPath(r *http.Request) error {
-	// Reject control-plane IAM methods to prevent Confused Deputy attacks (b/546660220).
+	// Reject Healthcare API control-plane custom methods to prevent Confused
+	// Deputy attacks (b/546660220). Requests are forwarded to the backend with
+	// the proxy service account's credentials, so any control-plane custom
+	// method (e.g. :export, :import, :deidentify, :rollback, :setIamPolicy)
+	// would execute with the service account's privileges and bypass SMART
+	// scope / patient-context enforcement, which only governs the FHIR REST
+	// API. SMART FHIR REST requests never use custom methods
+	// ("<resource>:<method>"), so reject any ":" in the request path. The query
+	// string -- which may legitimately contain FHIR search modifiers such as
+	// "name:contains" -- is excluded because r.URL.Path omits it.
 	path := r.URL.Path
-	if strings.Contains(path, ":setIamPolicy") ||
-		strings.Contains(path, ":getIamPolicy") ||
-		strings.Contains(path, ":testIamPermissions") {
-		return status.Errorf(codes.PermissionDenied, "control-plane IAM methods are not permitted via SMART proxy: %q", path)
+	if strings.ContainsRune(path, ':') {
+		return status.Errorf(codes.PermissionDenied, "control-plane custom methods are not permitted via SMART proxy: %q", path)
 	}
 
 	for _, prefix := range s.opts.AllowedPathPrefix {
